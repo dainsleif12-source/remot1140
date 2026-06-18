@@ -81,7 +81,6 @@
     .right { grid-area: right; }
     .stop { grid-area: stop; background: #e74c3c; border-color: #e74c3c; }
 
-    /* Satu Indikator LED (warna sama untuk semua arah) */
     .single-indicator {
       display: flex;
       flex-direction: column;
@@ -102,13 +101,12 @@
       text-transform: uppercase;
       letter-spacing: 1px;
     }
-    /* Aktif = warna hijau untuk F,B,L,R */
+    /* Aktif = hijau untuk gerak */
     .single-indicator.active .single-led {
       background: #2ecc71;
       box-shadow: 0 0 18px #2ecc71;
       transform: scale(1.1);
     }
-    /* Mati (S) = tetap abu-abu */
     .single-indicator:not(.active) .single-led {
       background: #444;
       box-shadow: 0 0 5px rgba(0,0,0,0.4);
@@ -186,7 +184,7 @@
       <button class="btn down" id="btnB">⬇️</button>
     </div>
 
-    <!-- Satu Indikator LED Virtual -->
+    <!-- Indikator LED Tunggal -->
     <div class="single-indicator" id="singleIndicator">
       <div class="single-led"></div>
       <span class="single-label" id="dirLabel">Stop</span>
@@ -194,9 +192,7 @@
 
     <div class="speed-section">
       <div class="speed-label">Speed (0-9)</div>
-      <div class="speed-buttons" id="speedButtons">
-        <!-- Tombol 0-9 diisi oleh JS -->
-      </div>
+      <div class="speed-buttons" id="speedButtons"></div>
       <input type="range" id="speedSlider" min="0" max="9" value="5" step="1" style="margin-top: 1rem;">
       <div><span id="speedValue">5</span>/9</div>
     </div>
@@ -215,7 +211,7 @@
       let bleServer = null;
       let bleCharacteristic = null;
       let connected = false;
-      let currentSpeed = 5; // default
+      let currentSpeed = 5;
 
       // UI elements
       const statusDiv = document.getElementById('status');
@@ -228,12 +224,9 @@
       const btnL = document.getElementById('btnL');
       const btnR = document.getElementById('btnR');
       const btnS = document.getElementById('btnS');
-
-      // Indikator tunggal
       const singleIndicator = document.getElementById('singleIndicator');
       const dirLabel = document.getElementById('dirLabel');
 
-      // Nama arah
       const dirNames = { 'F': 'Maju', 'B': 'Mundur', 'L': 'Kiri', 'R': 'Kanan', 'S': 'Stop' };
 
       // Buat tombol kecepatan 0-9
@@ -246,7 +239,6 @@
         speedButtonsContainer.appendChild(btn);
       }
 
-      // Update UI speed
       function updateSpeedUI(speed) {
         currentSpeed = speed;
         speedSlider.value = speed;
@@ -262,11 +254,9 @@
       updateSpeedUI(5);
 
       speedSlider.addEventListener('input', (e) => {
-        const val = parseInt(e.target.value);
-        updateSpeedUI(val);
+        updateSpeedUI(parseInt(e.target.value));
       });
 
-      // Set speed dari tombol, kirim jika connected
       function setSpeed(val) {
         updateSpeedUI(val);
         if (connected && bleCharacteristic) {
@@ -274,7 +264,6 @@
         }
       }
 
-      // Update indikator (aktif untuk F/B/L/R, nonaktif untuk S)
       function updateSingleIndicator(dir) {
         if (dir === 'S') {
           singleIndicator.classList.remove('active');
@@ -285,7 +274,6 @@
         }
       }
 
-      // Kirim perintah arah
       async function sendDirection(dir) {
         if (!connected || !bleCharacteristic) {
           console.log("Not connected");
@@ -302,7 +290,6 @@
         }
       }
 
-      // Kirim perintah (string 1 karakter)
       async function sendCommand(cmd) {
         if (!connected || !bleCharacteristic) return;
         try {
@@ -314,81 +301,53 @@
         }
       }
 
-      // === FUNGSI BARU: TOMBOL TEKAN UNTUK JALAN, LEPAS UNTUK BERHENTI ===
+      // === Fungsi tombol: tekan untuk jalan, lepas untuk berhenti ===
       function addDirectionButton(btn, dir) {
-        // Saat ditekan (pointerdown/touchstart)
         btn.addEventListener('pointerdown', (e) => {
           e.preventDefault();
           sendDirection(dir);
         });
-        // Saat dilepas (pointerup/touchend)
         btn.addEventListener('pointerup', (e) => {
           e.preventDefault();
           sendDirection('S');
         });
-        // Saat pointer meninggalkan tombol (misal drag keluar)
         btn.addEventListener('pointerleave', (e) => {
           sendDirection('S');
         });
       }
 
-      // Terapkan ke tombol arah
       addDirectionButton(btnF, 'F');
       addDirectionButton(btnB, 'B');
       addDirectionButton(btnL, 'L');
       addDirectionButton(btnR, 'R');
-
-      // Tombol Stop tetap pakai click biasa (tidak perlu hold)
       btnS.addEventListener('click', () => sendDirection('S'));
 
-      // Keyboard support (tekan tombol fisik)
+      // Keyboard support
       document.addEventListener('keydown', (e) => {
         if (!connected) return;
         const key = e.key.toLowerCase();
         e.preventDefault();
         switch(key) {
-          case 'arrowup':
-          case 'w':
-            sendDirection('F');
-            break;
-          case 'arrowdown':
-          case 's':
-            sendDirection('B');
-            break;
-          case 'arrowleft':
-          case 'a':
-            sendDirection('L');
-            break;
-          case 'arrowright':
-          case 'd':
-            sendDirection('R');
-            break;
-          case ' ':
-            sendDirection('S');
-            break;
+          case 'arrowup': case 'w': sendDirection('F'); break;
+          case 'arrowdown': case 's': sendDirection('B'); break;
+          case 'arrowleft': case 'a': sendDirection('L'); break;
+          case 'arrowright': case 'd': sendDirection('R'); break;
+          case ' ': sendDirection('S'); break;
           case '0': case '1': case '2': case '3': case '4':
           case '5': case '6': case '7': case '8': case '9':
-            setSpeed(parseInt(key));
-            break;
-          default: break;
+            setSpeed(parseInt(key)); break;
         }
       });
 
-      // Keyboard: saat tombol dilepas, otomatis kirim 'S'
       document.addEventListener('keyup', (e) => {
         if (!connected) return;
         const key = e.key.toLowerCase();
-        // Hanya untuk tombol arah, spasi tidak diulang kirim S agar tidak tumpang tindih
-        if (key === 'arrowup' || key === 'w' ||
-            key === 'arrowdown' || key === 's' ||
-            key === 'arrowleft' || key === 'a' ||
-            key === 'arrowright' || key === 'd') {
+        if (['arrowup','w','arrowdown','s','arrowleft','a','arrowright','d'].includes(key)) {
           e.preventDefault();
           sendDirection('S');
         }
       });
 
-      // Status update
       function updateConnectionStatus(conn) {
         connected = conn;
         if (conn) {
@@ -401,12 +360,10 @@
           statusDiv.className = 'status disconnected';
           connectButton.textContent = '🔗 Connect BLE';
           connectButton.classList.remove('disconnect');
-          // Matikan indikator
           updateSingleIndicator('S');
         }
       }
 
-      // Disconnect
       async function disconnect() {
         if (bleDevice && bleDevice.gatt.connected) {
           await bleDevice.gatt.disconnect();
@@ -417,10 +374,8 @@
         updateConnectionStatus(false);
       }
 
-      // Connect
       async function connect() {
         try {
-          console.log("Requesting BLE device...");
           bleDevice = await navigator.bluetooth.requestDevice({
             filters: [
               { name: DEVICE_NAME },
@@ -428,9 +383,7 @@
             ],
             optionalServices: [SERVICE_UUID]
           });
-          console.log("Device selected:", bleDevice.name);
           bleServer = await bleDevice.gatt.connect();
-          console.log("GATT connected");
           const service = await bleServer.getPrimaryService(SERVICE_UUID);
           bleCharacteristic = await service.getCharacteristic(CHARACTERISTIC_UUID);
           updateConnectionStatus(true);
@@ -458,7 +411,14 @@
         }
       });
 
-      // Awal: mati
+      // ===== KEEP-ALIVE: kirim ulang speed setiap 30 detik =====
+      setInterval(() => {
+        if (connected && bleCharacteristic) {
+          sendCommand(currentSpeed.toString());
+          console.log("Keep-alive: sent speed", currentSpeed);
+        }
+      }, 30000); // 30 detik
+
       updateSingleIndicator('S');
 
       if (!navigator.bluetooth) {
