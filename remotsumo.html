@@ -67,6 +67,9 @@
       display: flex;
       align-items: center;
       justify-content: center;
+      user-select: none;
+      -webkit-user-select: none;
+      touch-action: manipulation;
     }
     .btn:active {
       background: rgba(255,255,255,0.5);
@@ -78,41 +81,39 @@
     .right { grid-area: right; }
     .stop { grid-area: stop; background: #e74c3c; border-color: #e74c3c; }
 
-    /* Tambahan: Panel Indikator Arah */
-    .direction-indicators {
-      display: flex;
-      justify-content: center;
-      gap: 1.2rem;
-      margin: 1rem 0 0.5rem;
-      flex-wrap: wrap;
-    }
-    .indicator {
+    /* Satu Indikator LED (warna sama untuk semua arah) */
+    .single-indicator {
       display: flex;
       flex-direction: column;
       align-items: center;
-      font-size: 0.75rem;
-      text-transform: uppercase;
-      opacity: 0.5;
-      transition: opacity 0.3s, transform 0.2s;
+      margin: 1rem 0 0.5rem;
     }
-    .indicator .led {
-      width: 24px;
-      height: 24px;
+    .single-led {
+      width: 36px;
+      height: 36px;
       border-radius: 50%;
       background: #444;
-      margin-bottom: 0.3rem;
       box-shadow: 0 0 5px rgba(0,0,0,0.4);
-      transition: background 0.2s, box-shadow 0.2s;
+      transition: background 0.2s, box-shadow 0.2s, transform 0.2s;
+      margin-bottom: 0.3rem;
     }
-    .indicator.active {
-      opacity: 1;
+    .single-label {
+      font-size: 0.8rem;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+    /* Aktif = warna hijau untuk F,B,L,R */
+    .single-indicator.active .single-led {
+      background: #2ecc71;
+      box-shadow: 0 0 18px #2ecc71;
       transform: scale(1.1);
     }
-    /* Warna khusus tiap arah saat aktif */
-    .indicator[data-dir="F"].active .led { background: #2ecc71; box-shadow: 0 0 15px #2ecc71; } /* Hijau */
-    .indicator[data-dir="B"].active .led { background: #e74c3c; box-shadow: 0 0 15px #e74c3c; } /* Merah */
-    .indicator[data-dir="L"].active .led { background: #3498db; box-shadow: 0 0 15px #3498db; } /* Biru */
-    .indicator[data-dir="R"].active .led { background: #f39c12; box-shadow: 0 0 15px #f39c12; } /* Oranye */
+    /* Mati (S) = tetap abu-abu */
+    .single-indicator:not(.active) .single-led {
+      background: #444;
+      box-shadow: 0 0 5px rgba(0,0,0,0.4);
+      transform: scale(1);
+    }
 
     .speed-section {
       margin: 1.5rem 0;
@@ -185,24 +186,10 @@
       <button class="btn down" id="btnB">⬇️</button>
     </div>
 
-    <!-- Indikator LED Virtual -->
-    <div class="direction-indicators" id="directionIndicators">
-      <div class="indicator" data-dir="F">
-        <div class="led"></div>
-        <span>Maju</span>
-      </div>
-      <div class="indicator" data-dir="B">
-        <div class="led"></div>
-        <span>Mundur</span>
-      </div>
-      <div class="indicator" data-dir="L">
-        <div class="led"></div>
-        <span>Kiri</span>
-      </div>
-      <div class="indicator" data-dir="R">
-        <div class="led"></div>
-        <span>Kanan</span>
-      </div>
+    <!-- Satu Indikator LED Virtual -->
+    <div class="single-indicator" id="singleIndicator">
+      <div class="single-led"></div>
+      <span class="single-label" id="dirLabel">Stop</span>
     </div>
 
     <div class="speed-section">
@@ -213,7 +200,7 @@
       <input type="range" id="speedSlider" min="0" max="9" value="5" step="1" style="margin-top: 1rem;">
       <div><span id="speedValue">5</span>/9</div>
     </div>
-    <div class="footer">Web Bluetooth API • Only Chrome/Edge</div>
+    <div class="footer">Tekan & tahan tombol arah • Lepas untuk berhenti</div>
   </div>
 
   <script>
@@ -241,6 +228,13 @@
       const btnL = document.getElementById('btnL');
       const btnR = document.getElementById('btnR');
       const btnS = document.getElementById('btnS');
+
+      // Indikator tunggal
+      const singleIndicator = document.getElementById('singleIndicator');
+      const dirLabel = document.getElementById('dirLabel');
+
+      // Nama arah
+      const dirNames = { 'F': 'Maju', 'B': 'Mundur', 'L': 'Kiri', 'R': 'Kanan', 'S': 'Stop' };
 
       // Buat tombol kecepatan 0-9
       for (let i = 0; i <= 9; i++) {
@@ -280,18 +274,18 @@
         }
       }
 
-      // Fungsi untuk mengupdate indikator arah di UI
-      function updateDirectionIndicator(dir) {
-        // Hapus kelas active dari semua indikator
-        document.querySelectorAll('.indicator').forEach(ind => ind.classList.remove('active'));
-        if (dir === 'S') return; // Semua mati jika stop
-        const activeIndicator = document.querySelector(`.indicator[data-dir="${dir}"]`);
-        if (activeIndicator) {
-          activeIndicator.classList.add('active');
+      // Update indikator (aktif untuk F/B/L/R, nonaktif untuk S)
+      function updateSingleIndicator(dir) {
+        if (dir === 'S') {
+          singleIndicator.classList.remove('active');
+          dirLabel.textContent = 'Stop';
+        } else {
+          singleIndicator.classList.add('active');
+          dirLabel.textContent = dirNames[dir] || dir;
         }
       }
 
-      // Kirim perintah arah (dimodifikasi agar update indikator)
+      // Kirim perintah arah
       async function sendDirection(dir) {
         if (!connected || !bleCharacteristic) {
           console.log("Not connected");
@@ -300,9 +294,7 @@
         try {
           await bleCharacteristic.writeValue(new TextEncoder().encode(dir));
           console.log("Sent:", dir);
-          // Update indikator visual
-          updateDirectionIndicator(dir);
-          // Vibrasi (opsional di mobile)
+          updateSingleIndicator(dir);
           if (navigator.vibrate) navigator.vibrate(20);
         } catch (error) {
           console.error("Gagal kirim:", error);
@@ -322,14 +314,34 @@
         }
       }
 
-      // Event listener tombol arah
-      btnF.addEventListener('click', () => sendDirection('F'));
-      btnB.addEventListener('click', () => sendDirection('B'));
-      btnL.addEventListener('click', () => sendDirection('L'));
-      btnR.addEventListener('click', () => sendDirection('R'));
+      // === FUNGSI BARU: TOMBOL TEKAN UNTUK JALAN, LEPAS UNTUK BERHENTI ===
+      function addDirectionButton(btn, dir) {
+        // Saat ditekan (pointerdown/touchstart)
+        btn.addEventListener('pointerdown', (e) => {
+          e.preventDefault();
+          sendDirection(dir);
+        });
+        // Saat dilepas (pointerup/touchend)
+        btn.addEventListener('pointerup', (e) => {
+          e.preventDefault();
+          sendDirection('S');
+        });
+        // Saat pointer meninggalkan tombol (misal drag keluar)
+        btn.addEventListener('pointerleave', (e) => {
+          sendDirection('S');
+        });
+      }
+
+      // Terapkan ke tombol arah
+      addDirectionButton(btnF, 'F');
+      addDirectionButton(btnB, 'B');
+      addDirectionButton(btnL, 'L');
+      addDirectionButton(btnR, 'R');
+
+      // Tombol Stop tetap pakai click biasa (tidak perlu hold)
       btnS.addEventListener('click', () => sendDirection('S'));
 
-      // Keyboard support
+      // Keyboard support (tekan tombol fisik)
       document.addEventListener('keydown', (e) => {
         if (!connected) return;
         const key = e.key.toLowerCase();
@@ -362,6 +374,20 @@
         }
       });
 
+      // Keyboard: saat tombol dilepas, otomatis kirim 'S'
+      document.addEventListener('keyup', (e) => {
+        if (!connected) return;
+        const key = e.key.toLowerCase();
+        // Hanya untuk tombol arah, spasi tidak diulang kirim S agar tidak tumpang tindih
+        if (key === 'arrowup' || key === 'w' ||
+            key === 'arrowdown' || key === 's' ||
+            key === 'arrowleft' || key === 'a' ||
+            key === 'arrowright' || key === 'd') {
+          e.preventDefault();
+          sendDirection('S');
+        }
+      });
+
       // Status update
       function updateConnectionStatus(conn) {
         connected = conn;
@@ -375,8 +401,8 @@
           statusDiv.className = 'status disconnected';
           connectButton.textContent = '🔗 Connect BLE';
           connectButton.classList.remove('disconnect');
-          // Matikan semua indikator saat disconnect
-          updateDirectionIndicator('S');
+          // Matikan indikator
+          updateSingleIndicator('S');
         }
       }
 
@@ -408,9 +434,7 @@
           const service = await bleServer.getPrimaryService(SERVICE_UUID);
           bleCharacteristic = await service.getCharacteristic(CHARACTERISTIC_UUID);
           updateConnectionStatus(true);
-          // Kirim kecepatan default
           sendCommand(currentSpeed.toString());
-          // Pantau disconnect
           bleDevice.addEventListener('gattserverdisconnected', onDisconnect);
         } catch (error) {
           console.error("Connection failed:", error);
@@ -434,10 +458,9 @@
         }
       });
 
-      // Inisialisasi awal indikator (semua mati)
-      updateDirectionIndicator('S');
+      // Awal: mati
+      updateSingleIndicator('S');
 
-      // Cek dukungan Web Bluetooth
       if (!navigator.bluetooth) {
         statusDiv.textContent = '❌ Web Bluetooth tidak didukung. Gunakan Chrome/Edge.';
         statusDiv.className = 'status disconnected';
