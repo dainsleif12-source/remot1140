@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes, maximum-scale=2.0">
+  <title>Remote Robot Sumo ESP32 - BLE Web</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #1a2a6c, #b21f1f, #fdbb2d);
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      color: white;
+      padding: 1rem;
+    }
+    .container {
+      background: rgba(255,255,255,0.15);
+      backdrop-filter: blur(10px);
+      border-radius: 24px;
+      padding: 2rem;
+      width: 100%;
+      max-width: 480px;
+      box-shadow: 0 20px 40px rgba(0,0,0,0.4);
+      text-align: center;
+    }
+    h1 {
+      font-size: 2rem;
+      margin-bottom: 0.5rem;
+      text-shadow: 2px 2px 4px rgba(0,0,0,0.4);
+    }
+    .status {
+      font-size: 1rem;
+      margin: 0.5rem 0 1rem;
+      padding: 0.3rem 1rem;
+      background: rgba(0,0,0,0.3);
+      border-radius: 20px;
+      display: inline-block;
+    }
+    .status.connected { background: #2ecc71; }
+    .status.disconnected { background: #e74c3c; }
+
+    .controls {
+      display: grid;
+      grid-template-areas:
+        ".    up   ."
+        "left stop right"
+        ".   down  .";
+      gap: 0.8rem;
+      justify-content: center;
+      margin: 1.5rem 0;
+    }
+    .btn {
+      background: rgba(255,255,255,0.2);
+      border: 2px solid rgba(255,255,255,0.5);
+      color: white;
+      font-size: 2rem;
+      border-radius: 16px;
+      padding: 0.8rem;
+      min-width: 70px;
+      min-height: 70px;
+      cursor: pointer;
+      transition: all 0.2s;
+      backdrop-filter: blur(5px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .btn:active {
+      background: rgba(255,255,255,0.5);
+      transform: scale(0.95);
+    }
+    .up { grid-area: up; }
+    .down { grid-area: down; }
+    .left { grid-area: left; }
+    .right { grid-area: right; }
+    .stop { grid-area: stop; background: #e74c3c; border-color: #e74c3c; }
+
+    .speed-section {
+      margin: 1.5rem 0;
+    }
+    .speed-label {
+      font-size: 0.9rem;
+      margin-bottom: 0.5rem;
+    }
+    .speed-buttons {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 0.4rem;
+    }
+    .speed-btn {
+      background: rgba(255,255,255,0.2);
+      border: 1px solid rgba(255,255,255,0.5);
+      color: white;
+      font-size: 1.2rem;
+      width: 40px;
+      height: 40px;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: 0.2s;
+    }
+    .speed-btn.active {
+      background: #3498db;
+      border-color: #3498db;
+      font-weight: bold;
+    }
+    .connect-btn {
+      background: #2ecc71;
+      border: none;
+      color: white;
+      font-size: 1.1rem;
+      font-weight: bold;
+      padding: 0.7rem 2rem;
+      border-radius: 30px;
+      cursor: pointer;
+      margin: 0.5rem;
+      transition: 0.2s;
+    }
+    .connect-btn:hover { background: #27ae60; }
+    .connect-btn.disconnect { background: #e74c3c; }
+    .connect-btn.disconnect:hover { background: #c0392b; }
+
+    .footer {
+      margin-top: 1rem;
+      font-size: 0.8rem;
+      opacity: 0.8;
+    }
+    input[type=range] {
+      width: 80%;
+      margin: 0.5rem 0;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🤖 SumoBot Remote</h1>
+    <div id="status" class="status disconnected">🔴 Disconnected</div>
+    <br>
+    <button id="connectButton" class="connect-btn">🔗 Connect BLE</button>
+
+    <div class="controls">
+      <button class="btn up" id="btnF">⬆️</button>
+      <button class="btn left" id="btnL">⬅️</button>
+      <button class="btn stop" id="btnS">⏹️</button>
+      <button class="btn right" id="btnR">➡️</button>
+      <button class="btn down" id="btnB">⬇️</button>
+    </div>
+
+    <div class="speed-section">
+      <div class="speed-label">Speed (0-9)</div>
+      <div class="speed-buttons" id="speedButtons">
+        <!-- Akan diisi tombol 0-9 oleh JS -->
+      </div>
+      <input type="range" id="speedSlider" min="0" max="9" value="5" step="1" style="margin-top: 1rem;">
+      <div><span id="speedValue">5</span>/9</div>
+    </div>
+    <div class="footer">Web Bluetooth API • Only Chrome/Edge</div>
+  </div>
+
+  <script>
+    (function() {
+      // UUID dan nama device
+      const SERVICE_UUID = "4fafc201-1fb5-459e-8fcc-c5c9c331914b";
+      const CHARACTERISTIC_UUID = "beb5483e-36e1-4688-b7f5-ea07361b26a8";
+      const DEVICE_NAME = "ESP32_SumoBot";
+
+      // State
+      let bleDevice = null;
+      let bleServer = null;
+      let bleCharacteristic = null;
+      let connected = false;
+      let currentSpeed = 5; // default
+
+      // UI elements
+      const statusDiv = document.getElementById('status');
+      const connectButton = document.getElementById('connectButton');
+      const speedButtonsContainer = document.getElementById('speedButtons');
+      const speedSlider = document.getElementById('speedSlider');
+      const speedValueSpan = document.getElementById('speedValue');
+      const btnF = document.getElementById('btnF');
+      const btnB = document.getElementById('btnB');
+      const btnL = document.getElementById('btnL');
+      const btnR = document.getElementById('btnR');
+      const btnS = document.getElementById('btnS');
+
+      // Buat tombol kecepatan 0-9
+      for (let i = 0; i <= 9; i++) {
+        const btn = document.createElement('button');
+        btn.className = 'speed-btn';
+        btn.dataset.speed = i;
+        btn.textContent = i;
+        btn.addEventListener('click', () => setSpeed(i));
+        speedButtonsContainer.appendChild(btn);
+      }
+
+      // Update UI speed
+      function updateSpeedUI(speed) {
+        currentSpeed = speed;
+        speedSlider.value = speed;
+        speedValueSpan.textContent = speed;
+        // Tandai tombol aktif
+        document.querySelectorAll('.speed-btn').forEach(b => {
+          if (parseInt(b.dataset.speed) === speed) {
+            b.classList.add('active');
+          } else {
+            b.classList.remove('active');
+          }
+        });
+      }
+      updateSpeedUI(5);
+
+      speedSlider.addEventListener('input', (e) => {
+        const val = parseInt(e.target.value);
+        updateSpeedUI(val);
+      });
+
+      // Set speed dari tombol, kirim jika connected
+      function setSpeed(val) {
+        updateSpeedUI(val);
+        if (connected && bleCharacteristic) {
+          sendCommand(val.toString());
+        }
+      }
+
+      // Kirim perintah arah
+      async function sendDirection(dir) {
+        if (!connected || !bleCharacteristic) {
+          console.log("Not connected");
+          return;
+        }
+        try {
+          await bleCharacteristic.writeValue(new TextEncoder().encode(dir));
+          console.log("Sent:", dir);
+          // Vibrasi (opsional di mobile)
+          if (navigator.vibrate) navigator.vibrate(20);
+        } catch (error) {
+          console.error("Gagal kirim:", error);
+          disconnect();
+        }
+      }
+
+      // Kirim perintah (string 1 karakter)
+      async function sendCommand(cmd) {
+        if (!connected || !bleCharacteristic) return;
+        try {
+          await bleCharacteristic.writeValue(new TextEncoder().encode(cmd));
+          console.log("Sent:", cmd);
+        } catch (error) {
+          console.error("Write error:", error);
+          disconnect();
+        }
+      }
+
+      // Event listener tombol arah
+      btnF.addEventListener('click', () => sendDirection('F'));
+      btnB.addEventListener('click', () => sendDirection('B'));
+      btnL.addEventListener('click', () => sendDirection('L'));
+      btnR.addEventListener('click', () => sendDirection('R'));
+      btnS.addEventListener('click', () => sendDirection('S'));
+
+      // Keyboard support
+      document.addEventListener('keydown', (e) => {
+        if (!connected) return;
+        const key = e.key.toLowerCase();
+        e.preventDefault();
+        switch(key) {
+          case 'arrowup':
+          case 'w':
+            sendDirection('F');
+            break;
+          case 'arrowdown':
+          case 's':
+            sendDirection('B');
+            break;
+          case 'arrowleft':
+          case 'a':
+            sendDirection('L');
+            break;
+          case 'arrowright':
+          case 'd':
+            sendDirection('R');
+            break;
+          case ' ':
+            sendDirection('S');
+            break;
+          case '0': case '1': case '2': case '3': case '4':
+          case '5': case '6': case '7': case '8': case '9':
+            setSpeed(parseInt(key));
+            break;
+          default: break;
+        }
+      });
+
+      // Status update
+      function updateConnectionStatus(conn) {
+        connected = conn;
+        if (conn) {
+          statusDiv.textContent = '🟢 Connected';
+          statusDiv.className = 'status connected';
+          connectButton.textContent = '🔌 Disconnect';
+          connectButton.classList.add('disconnect');
+        } else {
+          statusDiv.textContent = '🔴 Disconnected';
+          statusDiv.className = 'status disconnected';
+          connectButton.textContent = '🔗 Connect BLE';
+          connectButton.classList.remove('disconnect');
+        }
+      }
+
+      // Disconnect
+      async function disconnect() {
+        if (bleDevice && bleDevice.gatt.connected) {
+          await bleDevice.gatt.disconnect();
+        }
+        bleDevice = null;
+        bleServer = null;
+        bleCharacteristic = null;
+        updateConnectionStatus(false);
+      }
+
+      // Connect
+      async function connect() {
+        try {
+          console.log("Requesting BLE device...");
+          bleDevice = await navigator.bluetooth.requestDevice({
+            filters: [
+              { name: DEVICE_NAME },
+              { services: [SERVICE_UUID] }
+            ],
+            optionalServices: [SERVICE_UUID]
+          });
+          console.log("Device selected:", bleDevice.name);
+          bleServer = await bleDevice.gatt.connect();
+          console.log("GATT connected");
+          const service = await bleServer.getPrimaryService(SERVICE_UUID);
+          bleCharacteristic = await service.getCharacteristic(CHARACTERISTIC_UUID);
+          updateConnectionStatus(true);
+          // Kirim kecepatan default
+          sendCommand(currentSpeed.toString());
+          // Pantau disconnect
+          bleDevice.addEventListener('gattserverdisconnected', onDisconnect);
+        } catch (error) {
+          console.error("Connection failed:", error);
+          updateConnectionStatus(false);
+        }
+      }
+
+      function onDisconnect() {
+        console.log("Device disconnected");
+        bleDevice = null;
+        bleServer = null;
+        bleCharacteristic = null;
+        updateConnectionStatus(false);
+      }
+
+      connectButton.addEventListener('click', async () => {
+        if (connected) {
+          await disconnect();
+        } else {
+          await connect();
+        }
+      });
+
+      // Jika sudah pernah paired, bisa auto-reconnect? Tidak di web, harus manual.
+      // Inisialisasi
+      if (!navigator.bluetooth) {
+        statusDiv.textContent = '❌ Web Bluetooth tidak didukung. Gunakan Chrome/Edge.';
+        statusDiv.className = 'status disconnected';
+        connectButton.disabled = true;
+        connectButton.textContent = 'Browser tidak mendukung';
+      }
+    })();
+  </script>
+</body>
+</html>
