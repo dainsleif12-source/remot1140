@@ -9,173 +9,47 @@
     body {
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
       background: linear-gradient(135deg, #1a2a6c, #b21f1f, #fdbb2d);
-      min-height: 100vh;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      color: white;
-      padding: 1rem;
+      min-height: 100vh; display: flex; justify-content: center; align-items: center; color: white; padding: 1rem;
     }
     .container {
-      background: rgba(255,255,255,0.15);
-      backdrop-filter: blur(10px);
-      border-radius: 24px;
-      padding: 2rem;
-      width: 100%;
-      max-width: 480px;
-      box-shadow: 0 20px 40px rgba(0,0,0,0.4);
-      text-align: center;
+      background: rgba(255,255,255,0.15); backdrop-filter: blur(10px); border-radius: 24px; padding: 2rem;
+      width: 100%; max-width: 480px; box-shadow: 0 20px 40px rgba(0,0,0,0.4); text-align: center;
     }
-    h1 {
-      font-size: 2rem;
-      margin-bottom: 0.5rem;
-      text-shadow: 2px 2px 4px rgba(0,0,0,0.4);
-    }
-    .status {
-      font-size: 1rem;
-      margin: 0.5rem 0 1rem;
-      padding: 0.3rem 1rem;
-      background: rgba(0,0,0,0.3);
-      border-radius: 20px;
-      display: inline-block;
-    }
-    .status.connected { background: #2ecc71; }
-    .status.disconnected { background: #e74c3c; }
-
-    .controls {
-      display: grid;
-      grid-template-areas:
-        ".    up   ."
-        "left stop right"
-        ".   down  .";
-      gap: 0.8rem;
-      justify-content: center;
-      margin: 1.5rem 0;
-    }
+    h1 { font-size: 2rem; margin-bottom: 0.5rem; text-shadow: 2px 2px 4px rgba(0,0,0,0.4); }
+    .status { font-size: 1rem; margin: 0.5rem 0 1rem; padding: 0.3rem 1rem; background: rgba(0,0,0,0.3); border-radius: 20px; display: inline-block; }
+    .status.connected { background: #2ecc71; } .status.disconnected { background: #e74c3c; }
+    .controls { display: grid; grid-template-areas: ". up ." "left stop right" ". down ."; gap: 0.8rem; justify-content: center; margin: 1.5rem 0; }
     .btn {
-      background: rgba(255,255,255,0.2);
-      border: 2px solid rgba(255,255,255,0.5);
-      color: white;
-      font-size: 2rem;
-      border-radius: 16px;
-      padding: 0.8rem;
-      min-width: 70px;
-      min-height: 70px;
-      cursor: pointer;
-      transition: all 0.2s;
-      backdrop-filter: blur(5px);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      user-select: none;
-      -webkit-user-select: none;
-      touch-action: manipulation;
+      background: rgba(255,255,255,0.2); border: 2px solid rgba(255,255,255,0.5); color: white; font-size: 2rem;
+      border-radius: 16px; padding: 0.8rem; min-width: 70px; min-height: 70px; cursor: pointer; transition: all 0.2s;
+      backdrop-filter: blur(5px); display: flex; align-items: center; justify-content: center; user-select: none; touch-action: manipulation;
     }
-    .btn:active {
-      background: rgba(255,255,255,0.5);
-      transform: scale(0.95);
-    }
-    .up { grid-area: up; }
-    .down { grid-area: down; }
-    .left { grid-area: left; }
-    .right { grid-area: right; }
-    .stop { grid-area: stop; background: #e74c3c; border-color: #e74c3c; }
-
-    .single-indicator {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      margin: 1rem 0 0.5rem;
-    }
+    .btn:active { background: rgba(255,255,255,0.5); transform: scale(0.95); }
+    .up { grid-area: up; } .down { grid-area: down; } .left { grid-area: left; } .right { grid-area: right; } .stop { grid-area: stop; background: #e74c3c; border-color: #e74c3c; }
+    .single-indicator { display: flex; flex-direction: column; align-items: center; margin: 1rem 0 0.5rem; }
     .single-led {
-      width: 36px;
-      height: 36px;
-      border-radius: 50%;
-      background: #444;
-      box-shadow: 0 0 5px rgba(0,0,0,0.4);
-      transition: background 0.2s, box-shadow 0.2s, transform 0.2s;
-      margin-bottom: 0.3rem;
+      width: 36px; height: 36px; border-radius: 50%; background: #444; box-shadow: 0 0 5px rgba(0,0,0,0.4);
+      transition: background 0.2s, box-shadow 0.2s, transform 0.2s; margin-bottom: 0.3rem;
     }
-    .single-label {
-      font-size: 0.8rem;
-      text-transform: uppercase;
-      letter-spacing: 1px;
-    }
-    /* Aktif = hijau untuk gerak */
-    .single-indicator.active .single-led {
-      background: #2ecc71;
-      box-shadow: 0 0 18px #2ecc71;
-      transform: scale(1.1);
-    }
-    .single-indicator:not(.active) .single-led {
-      background: #444;
-      box-shadow: 0 0 5px rgba(0,0,0,0.4);
-      transform: scale(1);
-    }
-
-    .speed-section {
-      margin: 1.5rem 0;
-    }
-    .speed-label {
-      font-size: 0.9rem;
-      margin-bottom: 0.5rem;
-    }
-    .speed-buttons {
-      display: flex;
-      flex-wrap: wrap;
-      justify-content: center;
-      gap: 0.4rem;
-    }
-    .speed-btn {
-      background: rgba(255,255,255,0.2);
-      border: 1px solid rgba(255,255,255,0.5);
-      color: white;
-      font-size: 1.2rem;
-      width: 40px;
-      height: 40px;
-      border-radius: 10px;
-      cursor: pointer;
-      transition: 0.2s;
-    }
-    .speed-btn.active {
-      background: #3498db;
-      border-color: #3498db;
-      font-weight: bold;
-    }
-    .connect-btn {
-      background: #2ecc71;
-      border: none;
-      color: white;
-      font-size: 1.1rem;
-      font-weight: bold;
-      padding: 0.7rem 2rem;
-      border-radius: 30px;
-      cursor: pointer;
-      margin: 0.5rem;
-      transition: 0.2s;
-    }
-    .connect-btn:hover { background: #27ae60; }
-    .connect-btn.disconnect { background: #e74c3c; }
-    .connect-btn.disconnect:hover { background: #c0392b; }
-
-    .footer {
-      margin-top: 1rem;
-      font-size: 0.8rem;
-      opacity: 0.8;
-    }
-    input[type=range] {
-      width: 80%;
-      margin: 0.5rem 0;
-    }
+    .single-label { font-size: 0.8rem; text-transform: uppercase; letter-spacing: 1px; }
+    .single-indicator.active .single-led { background: #2ecc71; box-shadow: 0 0 18px #2ecc71; transform: scale(1.1); }
+    .single-indicator:not(.active) .single-led { background: #444; box-shadow: 0 0 5px rgba(0,0,0,0.4); transform: scale(1); }
+    .speed-section { margin: 1.5rem 0; }
+    .speed-label { font-size: 0.9rem; margin-bottom: 0.5rem; }
+    .speed-buttons { display: flex; flex-wrap: wrap; justify-content: center; gap: 0.4rem; }
+    .speed-btn { background: rgba(255,255,255,0.2); border: 1px solid rgba(255,255,255,0.5); color: white; font-size: 1.2rem; width: 40px; height: 40px; border-radius: 10px; cursor: pointer; transition: 0.2s; }
+    .speed-btn.active { background: #3498db; border-color: #3498db; font-weight: bold; }
+    .connect-btn { background: #2ecc71; border: none; color: white; font-size: 1.1rem; font-weight: bold; padding: 0.7rem 2rem; border-radius: 30px; cursor: pointer; margin: 0.5rem; transition: 0.2s; }
+    .connect-btn:hover { background: #27ae60; } .connect-btn.disconnect { background: #e74c3c; } .connect-btn.disconnect:hover { background: #c0392b; }
+    .footer { margin-top: 1rem; font-size: 0.8rem; opacity: 0.8; }
+    input[type=range] { width: 80%; margin: 0.5rem 0; }
   </style>
 </head>
 <body>
   <div class="container">
     <h1>🤖 SumoBot Remote</h1>
-    <div id="status" class="status disconnected">🔴 Disconnected</div>
-    <br>
+    <div id="status" class="status disconnected">🔴 Disconnected</div><br>
     <button id="connectButton" class="connect-btn">🔗 Connect BLE</button>
-
     <div class="controls">
       <button class="btn up" id="btnF">⬆️</button>
       <button class="btn left" id="btnL">⬅️</button>
@@ -183,13 +57,10 @@
       <button class="btn right" id="btnR">➡️</button>
       <button class="btn down" id="btnB">⬇️</button>
     </div>
-
-    <!-- Indikator LED Tunggal -->
     <div class="single-indicator" id="singleIndicator">
       <div class="single-led"></div>
       <span class="single-label" id="dirLabel">Stop</span>
     </div>
-
     <div class="speed-section">
       <div class="speed-label">Speed (0-9)</div>
       <div class="speed-buttons" id="speedButtons"></div>
@@ -198,234 +69,116 @@
     </div>
     <div class="footer">Tekan & tahan tombol arah • Lepas untuk berhenti</div>
   </div>
-
   <script>
     (function() {
-      // UUID dan nama device
       const SERVICE_UUID = "4fafc201-1fb5-459e-8fcc-c5c9c331914b";
       const CHARACTERISTIC_UUID = "beb5483e-36e1-4688-b7f5-ea07361b26a8";
       const DEVICE_NAME = "ESP32_SumoBot";
 
-      // State
-      let bleDevice = null;
-      let bleServer = null;
-      let bleCharacteristic = null;
-      let connected = false;
-      let currentSpeed = 5;
+      let bleDevice = null, bleServer = null, bleCharacteristic = null, connected = false, currentSpeed = 5;
+      const statusDiv = document.getElementById('status'), connectButton = document.getElementById('connectButton'),
+            speedButtonsContainer = document.getElementById('speedButtons'), speedSlider = document.getElementById('speedSlider'),
+            speedValueSpan = document.getElementById('speedValue'), btnF = document.getElementById('btnF'),
+            btnB = document.getElementById('btnB'), btnL = document.getElementById('btnL'), btnR = document.getElementById('btnR'),
+            btnS = document.getElementById('btnS'), singleIndicator = document.getElementById('singleIndicator'), dirLabel = document.getElementById('dirLabel');
+      const dirNames = { 'F':'Maju', 'B':'Mundur', 'L':'Kiri', 'R':'Kanan', 'S':'Stop' };
 
-      // UI elements
-      const statusDiv = document.getElementById('status');
-      const connectButton = document.getElementById('connectButton');
-      const speedButtonsContainer = document.getElementById('speedButtons');
-      const speedSlider = document.getElementById('speedSlider');
-      const speedValueSpan = document.getElementById('speedValue');
-      const btnF = document.getElementById('btnF');
-      const btnB = document.getElementById('btnB');
-      const btnL = document.getElementById('btnL');
-      const btnR = document.getElementById('btnR');
-      const btnS = document.getElementById('btnS');
-      const singleIndicator = document.getElementById('singleIndicator');
-      const dirLabel = document.getElementById('dirLabel');
-
-      const dirNames = { 'F': 'Maju', 'B': 'Mundur', 'L': 'Kiri', 'R': 'Kanan', 'S': 'Stop' };
-
-      // Buat tombol kecepatan 0-9
-      for (let i = 0; i <= 9; i++) {
-        const btn = document.createElement('button');
-        btn.className = 'speed-btn';
-        btn.dataset.speed = i;
-        btn.textContent = i;
-        btn.addEventListener('click', () => setSpeed(i));
-        speedButtonsContainer.appendChild(btn);
+      for(let i=0; i<=9; i++){
+        const btn=document.createElement('button'); btn.className='speed-btn'; btn.dataset.speed=i; btn.textContent=i;
+        btn.addEventListener('click',()=>setSpeed(i)); speedButtonsContainer.appendChild(btn);
       }
 
-      function updateSpeedUI(speed) {
-        currentSpeed = speed;
-        speedSlider.value = speed;
-        speedValueSpan.textContent = speed;
-        document.querySelectorAll('.speed-btn').forEach(b => {
-          if (parseInt(b.dataset.speed) === speed) {
-            b.classList.add('active');
-          } else {
-            b.classList.remove('active');
-          }
-        });
+      function updateSpeedUI(speed){
+        currentSpeed=speed; speedSlider.value=speed; speedValueSpan.textContent=speed;
+        document.querySelectorAll('.speed-btn').forEach(b=>{ parseInt(b.dataset.speed)===speed?b.classList.add('active'):b.classList.remove('active'); });
       }
       updateSpeedUI(5);
+      speedSlider.addEventListener('input',e=>updateSpeedUI(parseInt(e.target.value)));
 
-      speedSlider.addEventListener('input', (e) => {
-        updateSpeedUI(parseInt(e.target.value));
-      });
+      function setSpeed(val){ updateSpeedUI(val); if(connected&&bleCharacteristic) sendCommand(val.toString()); }
 
-      function setSpeed(val) {
-        updateSpeedUI(val);
-        if (connected && bleCharacteristic) {
-          sendCommand(val.toString());
-        }
+      function updateSingleIndicator(dir){
+        if(dir==='S'){ singleIndicator.classList.remove('active'); dirLabel.textContent='Stop'; }
+        else{ singleIndicator.classList.add('active'); dirLabel.textContent=dirNames[dir]||dir; }
       }
 
-      function updateSingleIndicator(dir) {
-        if (dir === 'S') {
-          singleIndicator.classList.remove('active');
-          dirLabel.textContent = 'Stop';
-        } else {
-          singleIndicator.classList.add('active');
-          dirLabel.textContent = dirNames[dir] || dir;
-        }
-      }
-
-      async function sendDirection(dir) {
-        if (!connected || !bleCharacteristic) {
-          console.log("Not connected");
-          return;
-        }
-        try {
+      async function sendDirection(dir){
+        if(!connected||!bleCharacteristic) return;
+        try{
           await bleCharacteristic.writeValue(new TextEncoder().encode(dir));
-          console.log("Sent:", dir);
-          updateSingleIndicator(dir);
-          if (navigator.vibrate) navigator.vibrate(20);
-        } catch (error) {
-          console.error("Gagal kirim:", error);
-          disconnect();
-        }
+          console.log("Sent:",dir); updateSingleIndicator(dir); if(navigator.vibrate) navigator.vibrate(20);
+        }catch(e){ console.error("Gagal kirim:",e); disconnect(); }
       }
 
-      async function sendCommand(cmd) {
-        if (!connected || !bleCharacteristic) return;
-        try {
-          await bleCharacteristic.writeValue(new TextEncoder().encode(cmd));
-          console.log("Sent:", cmd);
-        } catch (error) {
-          console.error("Write error:", error);
-          disconnect();
-        }
+      async function sendCommand(cmd){
+        if(!connected||!bleCharacteristic) return;
+        try{ await bleCharacteristic.writeValue(new TextEncoder().encode(cmd)); console.log("Sent:",cmd); }
+        catch(e){ console.error("Write error:",e); disconnect(); }
       }
 
-      // === Fungsi tombol: tekan untuk jalan, lepas untuk berhenti ===
-      function addDirectionButton(btn, dir) {
-        btn.addEventListener('pointerdown', (e) => {
-          e.preventDefault();
-          sendDirection(dir);
-        });
-        btn.addEventListener('pointerup', (e) => {
-          e.preventDefault();
-          sendDirection('S');
-        });
-        btn.addEventListener('pointerleave', (e) => {
-          sendDirection('S');
-        });
+      function addDirectionButton(btn,dir){
+        btn.addEventListener('pointerdown',e=>{ e.preventDefault(); sendDirection(dir); });
+        btn.addEventListener('pointerup',e=>{ e.preventDefault(); sendDirection('S'); });
+        btn.addEventListener('pointerleave',()=>{ sendDirection('S'); });
       }
+      addDirectionButton(btnF,'F'); addDirectionButton(btnB,'B'); addDirectionButton(btnL,'L'); addDirectionButton(btnR,'R');
+      btnS.addEventListener('click',()=>sendDirection('S'));
 
-      addDirectionButton(btnF, 'F');
-      addDirectionButton(btnB, 'B');
-      addDirectionButton(btnL, 'L');
-      addDirectionButton(btnR, 'R');
-      btnS.addEventListener('click', () => sendDirection('S'));
-
-      // Keyboard support
-      document.addEventListener('keydown', (e) => {
-        if (!connected) return;
-        const key = e.key.toLowerCase();
-        e.preventDefault();
-        switch(key) {
+      document.addEventListener('keydown',e=>{
+        if(!connected) return; const key=e.key.toLowerCase(); e.preventDefault();
+        switch(key){
           case 'arrowup': case 'w': sendDirection('F'); break;
           case 'arrowdown': case 's': sendDirection('B'); break;
           case 'arrowleft': case 'a': sendDirection('L'); break;
           case 'arrowright': case 'd': sendDirection('R'); break;
           case ' ': sendDirection('S'); break;
-          case '0': case '1': case '2': case '3': case '4':
-          case '5': case '6': case '7': case '8': case '9':
-            setSpeed(parseInt(key)); break;
+          case '0': case '1': case '2': case '3': case '4': case '5': case '6': case '7': case '8': case '9': setSpeed(parseInt(key)); break;
         }
       });
-
-      document.addEventListener('keyup', (e) => {
-        if (!connected) return;
-        const key = e.key.toLowerCase();
-        if (['arrowup','w','arrowdown','s','arrowleft','a','arrowright','d'].includes(key)) {
-          e.preventDefault();
-          sendDirection('S');
-        }
+      document.addEventListener('keyup',e=>{
+        if(!connected) return; const key=e.key.toLowerCase();
+        if(['arrowup','w','arrowdown','s','arrowleft','a','arrowright','d'].includes(key)){ e.preventDefault(); sendDirection('S'); }
       });
 
-      function updateConnectionStatus(conn) {
-        connected = conn;
-        if (conn) {
-          statusDiv.textContent = '🟢 Connected';
-          statusDiv.className = 'status connected';
-          connectButton.textContent = '🔌 Disconnect';
-          connectButton.classList.add('disconnect');
-        } else {
-          statusDiv.textContent = '🔴 Disconnected';
-          statusDiv.className = 'status disconnected';
-          connectButton.textContent = '🔗 Connect BLE';
-          connectButton.classList.remove('disconnect');
-          updateSingleIndicator('S');
+      function updateConnectionStatus(conn){
+        connected=conn;
+        if(conn){
+          statusDiv.textContent='🟢 Connected'; statusDiv.className='status connected';
+          connectButton.textContent='🔌 Disconnect'; connectButton.classList.add('disconnect');
+        }else{
+          statusDiv.textContent='🔴 Disconnected'; statusDiv.className='status disconnected';
+          connectButton.textContent='🔗 Connect BLE'; connectButton.classList.remove('disconnect'); updateSingleIndicator('S');
         }
       }
 
-      async function disconnect() {
-        if (bleDevice && bleDevice.gatt.connected) {
-          await bleDevice.gatt.disconnect();
-        }
-        bleDevice = null;
-        bleServer = null;
-        bleCharacteristic = null;
-        updateConnectionStatus(false);
+      async function disconnect(){
+        if(bleDevice&&bleDevice.gatt.connected) await bleDevice.gatt.disconnect();
+        bleDevice=null; bleServer=null; bleCharacteristic=null; updateConnectionStatus(false);
       }
 
-      async function connect() {
-        try {
-          bleDevice = await navigator.bluetooth.requestDevice({
-            filters: [
-              { name: DEVICE_NAME },
-              { services: [SERVICE_UUID] }
-            ],
-            optionalServices: [SERVICE_UUID]
-          });
-          bleServer = await bleDevice.gatt.connect();
-          const service = await bleServer.getPrimaryService(SERVICE_UUID);
-          bleCharacteristic = await service.getCharacteristic(CHARACTERISTIC_UUID);
-          updateConnectionStatus(true);
-          sendCommand(currentSpeed.toString());
+      async function connect(){
+        try{
+          bleDevice=await navigator.bluetooth.requestDevice({ filters:[{name:DEVICE_NAME},{services:[SERVICE_UUID]}], optionalServices:[SERVICE_UUID] });
+          bleServer=await bleDevice.gatt.connect();
+          const service=await bleServer.getPrimaryService(SERVICE_UUID);
+          bleCharacteristic=await service.getCharacteristic(CHARACTERISTIC_UUID);
+          await bleCharacteristic.startNotifications(); // <-- Subscribe notifikasi (wajib untuk heartbeat)
+          updateConnectionStatus(true); sendCommand(currentSpeed.toString());
           bleDevice.addEventListener('gattserverdisconnected', onDisconnect);
-        } catch (error) {
-          console.error("Connection failed:", error);
-          updateConnectionStatus(false);
-        }
+        }catch(e){ console.error("Connection failed:",e); updateConnectionStatus(false); }
       }
 
-      function onDisconnect() {
-        console.log("Device disconnected");
-        bleDevice = null;
-        bleServer = null;
-        bleCharacteristic = null;
-        updateConnectionStatus(false);
-      }
+      function onDisconnect(){ console.log("Device disconnected"); bleDevice=null; bleServer=null; bleCharacteristic=null; updateConnectionStatus(false); }
 
-      connectButton.addEventListener('click', async () => {
-        if (connected) {
-          await disconnect();
-        } else {
-          await connect();
-        }
-      });
+      connectButton.addEventListener('click',async()=>{ if(connected) await disconnect(); else await connect(); });
 
-      // ===== KEEP-ALIVE: kirim ulang speed setiap 30 detik =====
-      setInterval(() => {
-        if (connected && bleCharacteristic) {
-          sendCommand(currentSpeed.toString());
-          console.log("Keep-alive: sent speed", currentSpeed);
-        }
-      }, 30000); // 30 detik
+      // Keep-alive 30 detik dari sisi HP
+      setInterval(()=>{ if(connected&&bleCharacteristic) sendCommand(currentSpeed.toString()); }, 30000);
 
       updateSingleIndicator('S');
-
-      if (!navigator.bluetooth) {
-        statusDiv.textContent = '❌ Web Bluetooth tidak didukung. Gunakan Chrome/Edge.';
-        statusDiv.className = 'status disconnected';
-        connectButton.disabled = true;
-        connectButton.textContent = 'Browser tidak mendukung';
+      if(!navigator.bluetooth){
+        statusDiv.textContent='❌ Web Bluetooth tidak didukung. Gunakan Chrome/Edge.';
+        statusDiv.className='status disconnected'; connectButton.disabled=true; connectButton.textContent='Browser tidak mendukung';
       }
     })();
   </script>
