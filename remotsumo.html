@@ -78,6 +78,42 @@
     .right { grid-area: right; }
     .stop { grid-area: stop; background: #e74c3c; border-color: #e74c3c; }
 
+    /* Tambahan: Panel Indikator Arah */
+    .direction-indicators {
+      display: flex;
+      justify-content: center;
+      gap: 1.2rem;
+      margin: 1rem 0 0.5rem;
+      flex-wrap: wrap;
+    }
+    .indicator {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      opacity: 0.5;
+      transition: opacity 0.3s, transform 0.2s;
+    }
+    .indicator .led {
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      background: #444;
+      margin-bottom: 0.3rem;
+      box-shadow: 0 0 5px rgba(0,0,0,0.4);
+      transition: background 0.2s, box-shadow 0.2s;
+    }
+    .indicator.active {
+      opacity: 1;
+      transform: scale(1.1);
+    }
+    /* Warna khusus tiap arah saat aktif */
+    .indicator[data-dir="F"].active .led { background: #2ecc71; box-shadow: 0 0 15px #2ecc71; } /* Hijau */
+    .indicator[data-dir="B"].active .led { background: #e74c3c; box-shadow: 0 0 15px #e74c3c; } /* Merah */
+    .indicator[data-dir="L"].active .led { background: #3498db; box-shadow: 0 0 15px #3498db; } /* Biru */
+    .indicator[data-dir="R"].active .led { background: #f39c12; box-shadow: 0 0 15px #f39c12; } /* Oranye */
+
     .speed-section {
       margin: 1.5rem 0;
     }
@@ -149,10 +185,30 @@
       <button class="btn down" id="btnB">⬇️</button>
     </div>
 
+    <!-- Indikator LED Virtual -->
+    <div class="direction-indicators" id="directionIndicators">
+      <div class="indicator" data-dir="F">
+        <div class="led"></div>
+        <span>Maju</span>
+      </div>
+      <div class="indicator" data-dir="B">
+        <div class="led"></div>
+        <span>Mundur</span>
+      </div>
+      <div class="indicator" data-dir="L">
+        <div class="led"></div>
+        <span>Kiri</span>
+      </div>
+      <div class="indicator" data-dir="R">
+        <div class="led"></div>
+        <span>Kanan</span>
+      </div>
+    </div>
+
     <div class="speed-section">
       <div class="speed-label">Speed (0-9)</div>
       <div class="speed-buttons" id="speedButtons">
-        <!-- Akan diisi tombol 0-9 oleh JS -->
+        <!-- Tombol 0-9 diisi oleh JS -->
       </div>
       <input type="range" id="speedSlider" min="0" max="9" value="5" step="1" style="margin-top: 1rem;">
       <div><span id="speedValue">5</span>/9</div>
@@ -201,7 +257,6 @@
         currentSpeed = speed;
         speedSlider.value = speed;
         speedValueSpan.textContent = speed;
-        // Tandai tombol aktif
         document.querySelectorAll('.speed-btn').forEach(b => {
           if (parseInt(b.dataset.speed) === speed) {
             b.classList.add('active');
@@ -225,7 +280,18 @@
         }
       }
 
-      // Kirim perintah arah
+      // Fungsi untuk mengupdate indikator arah di UI
+      function updateDirectionIndicator(dir) {
+        // Hapus kelas active dari semua indikator
+        document.querySelectorAll('.indicator').forEach(ind => ind.classList.remove('active'));
+        if (dir === 'S') return; // Semua mati jika stop
+        const activeIndicator = document.querySelector(`.indicator[data-dir="${dir}"]`);
+        if (activeIndicator) {
+          activeIndicator.classList.add('active');
+        }
+      }
+
+      // Kirim perintah arah (dimodifikasi agar update indikator)
       async function sendDirection(dir) {
         if (!connected || !bleCharacteristic) {
           console.log("Not connected");
@@ -234,6 +300,8 @@
         try {
           await bleCharacteristic.writeValue(new TextEncoder().encode(dir));
           console.log("Sent:", dir);
+          // Update indikator visual
+          updateDirectionIndicator(dir);
           // Vibrasi (opsional di mobile)
           if (navigator.vibrate) navigator.vibrate(20);
         } catch (error) {
@@ -307,6 +375,8 @@
           statusDiv.className = 'status disconnected';
           connectButton.textContent = '🔗 Connect BLE';
           connectButton.classList.remove('disconnect');
+          // Matikan semua indikator saat disconnect
+          updateDirectionIndicator('S');
         }
       }
 
@@ -364,8 +434,10 @@
         }
       });
 
-      // Jika sudah pernah paired, bisa auto-reconnect? Tidak di web, harus manual.
-      // Inisialisasi
+      // Inisialisasi awal indikator (semua mati)
+      updateDirectionIndicator('S');
+
+      // Cek dukungan Web Bluetooth
       if (!navigator.bluetooth) {
         statusDiv.textContent = '❌ Web Bluetooth tidak didukung. Gunakan Chrome/Edge.';
         statusDiv.className = 'status disconnected';
